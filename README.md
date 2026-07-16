@@ -44,7 +44,13 @@ Insert > Table > 2 คอลัมน์ (Key, Value) > ตั้งชื่อ
 | MasterFileName | `Master.xlsx` | ชื่อไฟล์ (หรือส่วนท้ายของ path) ที่จะ match ด้วย `Text.EndsWith` |
 | CurrentFileName | `Current.xlsx` | เหมือนกัน สำหรับไฟล์ current |
 | SheetName | `Sheet1` | ชื่อ sheet ที่มีข้อมูลจริงในทั้งสองไฟล์ (ต้องชื่อตรงกัน) |
-| KeyColumn | `ID` | ชื่อคอลัมน์ที่ใช้เทียบว่าเป็นแถวเดียวกัน |
+| MasterKeyColumn | `ID` | ชื่อคอลัมน์ใน **Master** ที่ใช้เป็น key เทียบว่าเป็นแถวเดียวกัน |
+| CurrentKeyColumn | `ID` | ชื่อคอลัมน์ใน **Current** ที่ใช้เป็น key — ตั้งแยกจาก Master ได้ ไม่ต้องสะกดตรงกัน (เช่น Master ใช้ `ID`, Current ใช้ `รหัส`) |
+
+> **ตำแหน่งคอลัมน์ (column position/letter) ไม่มีผลเลย** — query เลือกด้วย**ชื่อ header**
+> เสมอ (ผ่าน `Table.SelectColumns`) ไม่ว่า key จะอยู่คอลัมน์ไหนของแต่ละไฟล์ก็เทียบกันได้ปกติ
+> ข้อกำหนดเดียวคือต้องรู้ **ชื่อ header จริง** ของแต่ละไฟล์มาใส่ใน `MasterKeyColumn` /
+> `CurrentKeyColumn` ให้ตรง (ชื่อจะเหมือนกันหรือต่างกันระหว่างสองไฟล์ก็ได้)
 
 ### Step 2: โหลดฟังก์ชัน 2 ตัว (Connection Only)
 
