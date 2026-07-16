@@ -2,22 +2,26 @@
 // แล้วสรุปรายการ New / Missing / Duplicate เทียบตาม key ของแต่ละไฟล์ที่ตั้งค่าไว้ใน tblConfig
 // (MasterKeyColumn / CurrentKeyColumn แยกกันได้ — ชื่อคอลัมน์ไม่จำเป็นต้องตรงกันทั้งสองไฟล์
 // แค่ต้องเป็น "ค่าเดียวกัน" ที่ใช้เทียบว่าเป็นแถวเดียวกัน เช่น ID เดียวกันแต่หัวคอลัมน์คนละชื่อ)
-// ผลลัพธ์โหลดเข้ามาเฉพาะใน workbook นี้ (Check.xlsx) เท่านั้น — ไม่เขียนอะไรกลับไปที่
-// Master.xlsx / Current.xlsx บน SharePoint เลย ต้องใช้แค่สิทธิ์ Read บน site/library
+// ผลลัพธ์โหลดเข้ามาเฉพาะใน workbook นี้เท่านั้น — ไม่เขียนอะไรกลับไปที่ Master.xlsx / Current.xlsx
+// บน SharePoint เลย ต้องใช้แค่สิทธิ์ Read บน site/library
+//
+// SiteUrl ต้องเป็น Power Query Parameter (ไม่ใช่ค่าจาก tblConfig) — เพราะ SharePoint.Files()
+// เป็น data source ที่ต้องมี Privacy Level ชัดเจน ต่างจาก Excel.CurrentWorkbook() (local)
+// ถ้าส่งค่าที่มาจาก Excel.CurrentWorkbook() เข้า SharePoint.Files() โดยตรง (แม้อยู่คิวรีเดียวกัน)
+// จะโดน Formula.Firewall ที่ step นี้ — ดูหัวข้อ "ปัญหา Formula.Firewall ที่ AllFiles" ใน README
 
 let
     ConfigTable = Excel.CurrentWorkbook(){[Name = "tblConfig"]}[Content],
 
-    SiteUrl          = fnConfigValue(ConfigTable, "SiteUrl", null),
     MasterFileName   = fnConfigValue(ConfigTable, "MasterFileName", "Master.xlsx"),
     CurrentFileName  = fnConfigValue(ConfigTable, "CurrentFileName", "Current.xlsx"),
     SheetName        = fnConfigValue(ConfigTable, "SheetName", "Sheet1"),
     MasterKeyColumn  = fnConfigValue(ConfigTable, "MasterKeyColumn", "ID"),
     CurrentKeyColumn = fnConfigValue(ConfigTable, "CurrentKeyColumn", "ID"),
 
-    _CheckSiteUrl = if SiteUrl = null then error "ต้องตั้งค่า SiteUrl ใน tblConfig ก่อน" else SiteUrl,
+    _CheckSiteUrl = if SiteUrl = null or SiteUrl = "" then error "ต้องตั้งค่า Parameter 'SiteUrl' ก่อน (Home > Manage Parameters)" else SiteUrl,
 
-    // data source #1: SharePoint library — อ่านอย่างเดียว
+    // data source #1: SharePoint library — อ่านอย่างเดียว (SiteUrl มาจาก Parameter ไม่ใช่ tblConfig)
     AllFiles = SharePoint.Files(_CheckSiteUrl, [ApiVersion = 15]),
 
     MasterMatch = Table.SelectRows(AllFiles, each Text.EndsWith([Name], MasterFileName)),
