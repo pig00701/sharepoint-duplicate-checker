@@ -33,8 +33,8 @@ Public Sub RunCompareFiles()
     Set masterWb = Workbooks.Open(cfg.MasterFilePath, UpdateLinks:=0, ReadOnly:=True)
     Set currentWb = Workbooks.Open(cfg.CurrentFilePath, UpdateLinks:=0, ReadOnly:=True)
 
-    Set masterKeys = ReadKeyColumnValues(masterWb, cfg.SheetName, cfg.MasterKeyColumn)
-    Set currentKeys = ReadKeyColumnValues(currentWb, cfg.SheetName, cfg.CurrentKeyColumn)
+    Set masterKeys = ReadKeyColumnValues(masterWb, cfg.SheetName, cfg.MasterKeyColumn, cfg.MasterKeyColumnStartCol)
+    Set currentKeys = ReadKeyColumnValues(currentWb, cfg.SheetName, cfg.CurrentKeyColumn, cfg.CurrentKeyColumnStartCol)
 
     masterWb.Close SaveChanges:=False
     Set masterWb = Nothing

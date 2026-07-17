@@ -31,8 +31,10 @@ End Function
 ' columnHeader (row 1, case/space-insensitive) on the given sheet of wb.
 ' Values are normalized with CStr/Trim so numeric and text IDs compare
 ' consistently — note this means 1 and "1" match, but "01" and 1 do not.
+' startCol lets the header search skip leading columns (default 1 = column A).
 Public Function ReadKeyColumnValues(ByVal wb As Workbook, ByVal sheetName As String, _
-                                     ByVal columnHeader As String) As Collection
+                                     ByVal columnHeader As String, _
+                                     Optional ByVal startCol As Long = 1) As Collection
     Dim ws As Worksheet
     Dim lastCol As Long
     Dim lastRow As Long
@@ -52,7 +54,7 @@ Public Function ReadKeyColumnValues(ByVal wb As Workbook, ByVal sheetName As Str
 
     lastCol = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column
     colIdx = 0
-    For c = 1 To lastCol
+    For c = startCol To lastCol
         If Trim$(LCase$(CStr(ws.Cells(1, c).Value & vbNullString))) = _
            Trim$(LCase$(columnHeader)) Then
             colIdx = c

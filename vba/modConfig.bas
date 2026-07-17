@@ -12,6 +12,8 @@ Attribute VB_Name = "modConfig"
 '   SheetName          | Sheet1
 '   MasterKeyColumn    | ID
 '   CurrentKeyColumn   | ID
+'   MasterKeyColumnStartCol  | 1
+'   CurrentKeyColumnStartCol | 1
 '
 ' Rules:
 '   - Key names match case-insensitively, ignoring surrounding spaces.
@@ -19,6 +21,10 @@ Attribute VB_Name = "modConfig"
 '   - MasterKeyColumn / CurrentKeyColumn do NOT need to match each other or
 '     be in the same column position — each is looked up by header name in
 '     its own file (see modUtils.ReadKeyColumnValues).
+'   - MasterKeyColumnStartCol / CurrentKeyColumnStartCol let the header
+'     search skip leading columns in each file independently (default 1 =
+'     column A). Useful when both files have a decoy/duplicate header
+'     before the real key column.
 '
 ' Why local paths, not a SharePoint URL directly:
 '   Workbooks.Open on an https:// SharePoint URL is unreliable from VBA
@@ -35,6 +41,8 @@ Public Type CompareConfig
     SheetName As String
     MasterKeyColumn As String
     CurrentKeyColumn As String
+    MasterKeyColumnStartCol As Long
+    CurrentKeyColumnStartCol As Long
 End Type
 
 Public Function ReadCompareConfig() As CompareConfig
@@ -51,6 +59,8 @@ Public Function ReadCompareConfig() As CompareConfig
     cfg.SheetName = "Sheet1"
     cfg.MasterKeyColumn = "ID"
     cfg.CurrentKeyColumn = "ID"
+    cfg.MasterKeyColumnStartCol = 1
+    cfg.CurrentKeyColumnStartCol = 1
 
     Set lo = FindListObject("tblConfig")
     If lo Is Nothing Then
@@ -74,6 +84,8 @@ Public Function ReadCompareConfig() As CompareConfig
                     Case "sheetname":        cfg.SheetName = Trim$(CStr(settingValue))
                     Case "masterkeycolumn":  cfg.MasterKeyColumn = Trim$(CStr(settingValue))
                     Case "currentkeycolumn": cfg.CurrentKeyColumn = Trim$(CStr(settingValue))
+                    Case "masterkeycolumnstartcol":  cfg.MasterKeyColumnStartCol = CLng(settingValue)
+                    Case "currentkeycolumnstartcol": cfg.CurrentKeyColumnStartCol = CLng(settingValue)
                 End Select
             End If
         Next r

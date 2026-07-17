@@ -38,6 +38,8 @@ Port ของ `CompareFiles.pq` (Power Query) มาเป็น VBA — เป
    | SheetName | `Sheet1` |
    | MasterKeyColumn | `ID` |
    | CurrentKeyColumn | `ID` |
+   | MasterKeyColumnStartCol | `1` |
+   | CurrentKeyColumnStartCol | `1` |
 
 4. รัน `RunCompareFiles` → ดูผลใน sheet `Report`
 5. (แนะนำ) วางปุ่มบน sheet Config ผูกกับ `RunCompareFiles`
