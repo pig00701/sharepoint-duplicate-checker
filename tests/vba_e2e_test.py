@@ -25,6 +25,7 @@ def prep_dirs():
 def build_sample_files():
     master_path = os.path.join(SCRATCH, "files", "Master.xlsx")
     current_path = os.path.join(SCRATCH, "files", "Current.xlsx")
+    current_row5_path = os.path.join(SCRATCH, "files", "Current_HeaderRow5.xlsx")
 
     wb = Workbook()
     ws = wb.active
@@ -34,16 +35,32 @@ def build_sample_files():
         ws.append(row)
     wb.save(master_path)
 
+    current_rows = [("M2", "Bob"), ("M3", "Carol"), ("M4", "Dave"),
+                     ("M4", "Dave"), ("N1", "Eve")]
+
     wb = Workbook()
     ws = wb.active
     ws.title = "Sheet1"
     ws.append(["รหัส", "Name"])  # "รหัส" — deliberately different header from Master's "ID"
-    for row in [("M2", "Bob"), ("M3", "Carol"), ("M4", "Dave"),
-                ("M4", "Dave"), ("N1", "Eve")]:
+    for row in current_rows:
         ws.append(row)
     wb.save(current_path)
 
-    return master_path, current_path
+    # Same data, but the header sits on row 5 (rows 1-4 are title/blank rows)
+    # -- exercises MasterKeyColumnHeaderRow / CurrentKeyColumnHeaderRow.
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Sheet1"
+    ws.append(["Report generated 2026-07-17"])
+    ws.append([])
+    ws.append([])
+    ws.append([])
+    ws.append(["รหัส", "Name"])
+    for row in current_rows:
+        ws.append(row)
+    wb.save(current_row5_path)
+
+    return master_path, current_path, current_row5_path
 
 
 def patch_modules():
@@ -82,6 +99,8 @@ def build_workbook(xl, mods, master_path, current_path):
         ("SheetName", "Sheet1"),
         ("MasterKeyColumn", "ID"),
         ("CurrentKeyColumn", "รหัส"),
+        ("MasterKeyColumnHeaderRow", 1),
+        ("CurrentKeyColumnHeaderRow", 1),
     ]
     for i, (k, v) in enumerate(rows, start=2):
         ws.Range(f"A{i}").Value = k
@@ -136,7 +155,7 @@ def check(label, cond, detail=""):
 
 def main():
     prep_dirs()
-    master_path, current_path = build_sample_files()
+    master_path, current_path, current_row5_path = build_sample_files()
     mods = patch_modules()
     xl = win32com.client.DispatchEx("Excel.Application")
     xl.Visible = False
@@ -177,6 +196,19 @@ def main():
         expected_err = VB_OBJ_ERR + 612
         check("T2 unknown key column rejected",
               len(got) >= 2 and got[0] == "ERR" and int(got[1]) == expected_err, z2)
+
+        # ---- T3: Current header not on row 1 (row 5) -> must still find it
+        # once CurrentKeyColumnHeaderRow is set ----
+        set_config(wb, "CurrentKeyColumn", "รหัส")
+        set_config(wb, "CurrentFilePath", current_row5_path)
+        set_config(wb, "CurrentKeyColumnHeaderRow", 5)
+        clear_log(wb)
+        xl.Run("RunCompareFiles")
+        z1, z2 = read_log(wb)
+        report = read_report(wb)
+        check("T3 ran without error", z2 is None, z2)
+        check("T3 success log", z1 == "OK New=1 Missing=1 Dup=1", z1)
+        check("T3 report matches expected New/Missing/Duplicate", report == expected, report)
 
         wb.Close(SaveChanges=False)
     finally:

@@ -28,13 +28,16 @@ Public Function IsBlankValue(ByVal v As Variant) As Boolean
 End Function
 
 ' Reads every non-blank value under the header cell that matches
-' columnHeader (row 1, case/space-insensitive) on the given sheet of wb.
+' columnHeader (case/space-insensitive) on the given sheet of wb.
 ' Values are normalized with CStr/Trim so numeric and text IDs compare
 ' consistently — note this means 1 and "1" match, but "01" and 1 do not.
 ' startCol lets the header search skip leading columns (default 1 = column A).
+' headerRow is the row the header itself lives on (default 1); data is read
+' starting the row right below it.
 Public Function ReadKeyColumnValues(ByVal wb As Workbook, ByVal sheetName As String, _
                                      ByVal columnHeader As String, _
-                                     Optional ByVal startCol As Long = 1) As Collection
+                                     Optional ByVal startCol As Long = 1, _
+                                     Optional ByVal headerRow As Long = 1) As Collection
     Dim ws As Worksheet
     Dim lastCol As Long
     Dim lastRow As Long
@@ -52,10 +55,10 @@ Public Function ReadKeyColumnValues(ByVal wb As Workbook, ByVal sheetName As Str
             "ไม่พบ sheet '" & sheetName & "' ในไฟล์ " & wb.Name
     End If
 
-    lastCol = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column
+    lastCol = ws.Cells(headerRow, ws.Columns.Count).End(xlToLeft).Column
     colIdx = 0
     For c = startCol To lastCol
-        If Trim$(LCase$(CStr(ws.Cells(1, c).Value & vbNullString))) = _
+        If Trim$(LCase$(CStr(ws.Cells(headerRow, c).Value & vbNullString))) = _
            Trim$(LCase$(columnHeader)) Then
             colIdx = c
             Exit For
@@ -63,11 +66,12 @@ Public Function ReadKeyColumnValues(ByVal wb As Workbook, ByVal sheetName As Str
     Next c
     If colIdx = 0 Then
         Err.Raise vbObjectError + 612, "ReadKeyColumnValues", _
-            "ไม่พบคอลัมน์ '" & columnHeader & "' ใน sheet '" & sheetName & "' ของไฟล์ " & wb.Name
+            "ไม่พบคอลัมน์ '" & columnHeader & "' ใน sheet '" & sheetName & "' ของไฟล์ " & wb.Name & _
+            " (ค้นหาที่แถว " & headerRow & ")"
     End If
 
     lastRow = ws.Cells(ws.Rows.Count, colIdx).End(xlUp).Row
-    For r = 2 To lastRow
+    For r = headerRow + 1 To lastRow
         v = ws.Cells(r, colIdx).Value
         If Not IsBlankValue(v) Then result.Add Trim$(CStr(v))
     Next r

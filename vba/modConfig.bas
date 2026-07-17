@@ -14,6 +14,8 @@ Attribute VB_Name = "modConfig"
 '   CurrentKeyColumn   | ID
 '   MasterKeyColumnStartCol  | 1
 '   CurrentKeyColumnStartCol | 1
+'   MasterKeyColumnHeaderRow  | 1
+'   CurrentKeyColumnHeaderRow | 1
 '
 ' Rules:
 '   - Key names match case-insensitively, ignoring surrounding spaces.
@@ -25,6 +27,10 @@ Attribute VB_Name = "modConfig"
 '     search skip leading columns in each file independently (default 1 =
 '     column A). Useful when both files have a decoy/duplicate header
 '     before the real key column.
+'   - MasterKeyColumnHeaderRow / CurrentKeyColumnHeaderRow tell the search
+'     which row the header actually sits on in each file independently
+'     (default 1). Data is then read starting the row right below it.
+'     Use this when a file's header isn't on row 1 (e.g. row 5).
 '
 ' Why local paths, not a SharePoint URL directly:
 '   Workbooks.Open on an https:// SharePoint URL is unreliable from VBA
@@ -43,6 +49,8 @@ Public Type CompareConfig
     CurrentKeyColumn As String
     MasterKeyColumnStartCol As Long
     CurrentKeyColumnStartCol As Long
+    MasterKeyColumnHeaderRow As Long
+    CurrentKeyColumnHeaderRow As Long
 End Type
 
 Public Function ReadCompareConfig() As CompareConfig
@@ -61,6 +69,8 @@ Public Function ReadCompareConfig() As CompareConfig
     cfg.CurrentKeyColumn = "ID"
     cfg.MasterKeyColumnStartCol = 1
     cfg.CurrentKeyColumnStartCol = 1
+    cfg.MasterKeyColumnHeaderRow = 1
+    cfg.CurrentKeyColumnHeaderRow = 1
 
     Set lo = FindListObject("tblConfig")
     If lo Is Nothing Then
@@ -86,6 +96,8 @@ Public Function ReadCompareConfig() As CompareConfig
                     Case "currentkeycolumn": cfg.CurrentKeyColumn = Trim$(CStr(settingValue))
                     Case "masterkeycolumnstartcol":  cfg.MasterKeyColumnStartCol = CLng(settingValue)
                     Case "currentkeycolumnstartcol": cfg.CurrentKeyColumnStartCol = CLng(settingValue)
+                    Case "masterkeycolumnheaderrow":  cfg.MasterKeyColumnHeaderRow = CLng(settingValue)
+                    Case "currentkeycolumnheaderrow": cfg.CurrentKeyColumnHeaderRow = CLng(settingValue)
                 End Select
             End If
         Next r
